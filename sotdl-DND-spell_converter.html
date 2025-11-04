@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convertidor de Hechizos DND5e → SotDL</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); background-attachment: fixed; min-height: 100vh; padding: 20px; color: #e0e0e0; position: relative; overflow-x: hidden; }
+        body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: radial-gradient(circle at 20% 50%, rgba(139, 69, 19, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(184, 134, 11, 0.1) 0%, transparent 50%); pointer-events: none; z-index: 0; }
+        .container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; }
+        .lang-toggle { position: fixed; top: 20px; right: 20px; z-index: 100; }
+        .lang-btn { padding: 8px 16px; border: 1px solid #b8860b; border-radius: 4px; background: linear-gradient(135deg, #8b4513, #a0522d); color: #f4d03f; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+        .lang-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(184, 134, 11, 0.5); }
+        .lang-btn.active { background: linear-gradient(135deg, #a0522d, #8b4513); box-shadow: 0 0 15px rgba(244, 208, 63, 0.6); }
+        .header { text-align: center; color: #f4d03f; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.7); }
+        .header h1 { font-size: 32px; margin-bottom: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; background: linear-gradient(135deg, #f4d03f, #f39c12); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .header p { font-size: 14px; opacity: 0.85; color: #c0a080; }
+        .card { background: linear-gradient(135deg, #2a2a3e 0%, #1f1f2e 100%); border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(139, 69, 19, 0.3); border: 1px solid rgba(184, 134, 11, 0.2); backdrop-filter: blur(10px); }
+        .section-title { font-size: 18px; font-weight: 600; color: #f4d03f; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .section-title::before { content: ''; width: 4px; height: 24px; background: linear-gradient(135deg, #f4d03f, #f39c12); border-radius: 2px; box-shadow: 0 0 10px rgba(244, 208, 63, 0.5); }
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .control-group { display: flex; flex-direction: column; gap: 8px; }
+        .control-group label { font-size: 13px; font-weight: 600; color: #c0a080; }
+        button { padding: 10px 20px; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-primary { background: linear-gradient(135deg, #8b4513, #a0522d); color: #f4d03f; border: 1px solid #b8860b; box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3); }
+        .btn-primary:hover { background: linear-gradient(135deg, #a0522d, #8b4513); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(184, 134, 11, 0.5); text-shadow: 0 0 10px rgba(244, 208, 63, 0.5); }
+        .btn-success { background: linear-gradient(135deg, #27662a, #2d7e3a); color: #a8e6b8; border: 1px solid #4a9d6f; box-shadow: 0 4px 15px rgba(39, 102, 42, 0.3); }
+        .btn-success:hover { background: linear-gradient(135deg, #2d7e3a, #27662a); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(74, 157, 111, 0.5); }
+        .btn-danger { background: linear-gradient(135deg, #662727, #8b3a3a); color: #f4a8a8; border: 1px solid #b84a4a; box-shadow: 0 4px 15px rgba(102, 39, 39, 0.3); }
+        .btn-danger:hover { background: linear-gradient(135deg, #8b3a3a, #662727); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(184, 74, 74, 0.5); }
+        input[type="file"], textarea { padding: 10px; border: 1px solid #8b6914; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 12px; background: #1a1a2e; color: #c0a080; }
+        input[type="file"]::file-selector-button { background: linear-gradient(135deg, #8b4513, #a0522d); color: #f4d03f; border: 1px solid #b8860b; padding: 5px 15px; border-radius: 3px; cursor: pointer; font-weight: 600; }
+        textarea { resize: vertical; min-height: 150px; width: 100%; }
+        textarea:focus { outline: none; border-color: #f4d03f; box-shadow: 0 0 10px rgba(244, 208, 63, 0.3); }
+        .button-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        .message { padding: 12px; border-radius: 4px; margin-bottom: 15px; display: none; }
+        .message.success { background: rgba(39, 102, 42, 0.2); color: #a8e6b8; border-left: 4px solid #27662a; display: block; }
+        .message.error { background: rgba(102, 39, 39, 0.2); color: #f4a8a8; border-left: 4px solid #662727; display: block; }
+        .message.info { background: rgba(184, 134, 11, 0.2); color: #f4d03f; border-left: 4px solid #b8860b; display: block; }
+        .table-container { overflow-x: auto; scroll-behavior: smooth; max-height: 600px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: rgba(184, 134, 11, 0.1); border-bottom: 2px solid #8b6914; position: sticky; top: 0; }
+        th { padding: 12px; text-align: left; font-weight: 600; color: #f4d03f; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+        td { padding: 12px; border-bottom: 1px solid #8b6914; font-size: 12px; color: #c0a080; }
+        tbody tr:hover { background: rgba(184, 134, 11, 0.05); }
+        .spell-name { font-weight: 600; color: #f4d03f; }
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 3px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+        .description-cell { max-width: 300px; word-wrap: break-word; white-space: normal; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+        .badge-tradition { background: rgba(27, 94, 32, 0.3); color: #a8e6b8; border: 1px solid #27662a; }
+        .badge-spelltype { background: rgba(184, 134, 11, 0.3); color: #f4d03f; border: 1px solid #8b6914; }
+        .badge-damage { background: rgba(139, 69, 19, 0.3); color: #f4a8a8; border: 1px solid #8b4513; }
+        .loading { display: none; text-align: center; padding: 20px; }
+        .spinner { border: 3px solid #8b6914; border-top: 3px solid #f4d03f; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto; box-shadow: 0 0 10px rgba(244, 208, 63, 0.5); }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading p { color: #f4d03f; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .stat-box { background: rgba(184, 134, 11, 0.1); padding: 15px; border-radius: 4px; border: 1px solid #8b6914; }
+        .stat-label { font-size: 12px; color: #c0a080; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .stat-value { font-size: 24px; font-weight: 700; color: #f4d03f; text-shadow: 0 0 10px rgba(244, 208, 63, 0.3); }
+        @media (max-width: 768px) { .controls { grid-template-columns: 1fr; } .stats { grid-template-columns: 1fr; } .lang-toggle { top: 10px; right: 10px; } }
+    </style>
+</head>
+<body>
+    <div class="lang-toggle">
+        <button class="lang-btn active" data-lang="es" onclick="switchLanguage('es')">Español</button>
+        <button class="lang-btn" data-lang="en" onclick="switchLanguage('en')">English</button>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🔮 <span data-i18n="title">Convertidor de Hechizos</span></h1>
+            <p data-i18n="subtitle">Convierte hechizos de DND5e a Shadows of the Demon Lord</p>
+        </div>
+        <div class="card">
+            <div class="section-title" data-i18n="input">📥 Entrada (DND5e)</div>
+            <div class="controls">
+                <div class="control-group">
+                    <label data-i18n="fileLabel">Cargar archivo JSON</label>
+                    <input type="file" id="fileInput" accept=".json">
+                </div>
+                <div class="control-group">
+                    <label data-i18n="pasteLabel">O pegar JSON directamente</label>
+                    <button class="btn-primary" onclick="pasteFromClipboard()" data-i18n="pasteBtn">📋 Pegar desde portapapeles</button>
+                </div>
+            </div>
+            <textarea id="inputJSON" data-i18n-placeholder="inputPlaceholder"></textarea>
+            <div class="button-group" style="margin-top: 15px;">
+                <button class="btn-primary" onclick="convertSpells()" data-i18n="convertBtn">🔄 Convertir</button>
+                <button class="btn-danger" onclick="clearInput()" data-i18n="clearBtn">🗑️ Limpiar</button>
+            </div>
+            <div id="message" class="message"></div>
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 10px;" data-i18n="converting">Convirtiendo hechizos...</p>
+            </div>
+        </div>
+        <div class="card" id="outputSection" style="display: none;">
+            <div class="section-title" data-i18n="output">📤 Salida (SotDL)</div>
+            <div class="stats" id="stats"></div>
+            <div class="button-group" style="margin-bottom: 20px;">
+                <button class="btn-success" onclick="downloadJSON()" data-i18n="downloadBtn">⬇️ Descargar JSON</button>
+                <button class="btn-primary" onclick="copyToClipboard()" data-i18n="copyBtn">📋 Copiar al portapapeles</button>
+            </div>
+            <textarea id="outputJSON" data-i18n-placeholder="outputPlaceholder" readonly></textarea>
+        </div>
+        <div class="card" id="tableSection" style="display: none;">
+            <div class="section-title"><span data-i18n="preview">📊 Previsualización de Hechizos Convertidos</span> (<span id="spellCount">0</span>)</div>
+            <div class="table-wrapper">
+                <div class="table-container" id="tableContainer">
+                    <table id="spellsTable">
+                        <thead>
+                            <tr>
+                                <th data-i18n="colName">Nombre</th>
+                                <th data-i18n="colRank">Rango</th>
+                                <th data-i18n="colTradition">Tradición</th>
+                                <th data-i18n="colType">Tipo</th>
+                                <th data-i18n="colAttack">Atributo</th>
+                                <th data-i18n="colDefense">Defensa</th>
+                                <th data-i18n="colDamage">Daño</th>
+                                <th data-i18n="colTarget">Objetivo</th>
+                                <th data-i18n="colArea">Área</th>
+                                <th data-i18n="colDuration">Duración</th>
+                                <th data-i18n="colRequirements">Requisitos</th>
+                                <th data-i18n="colRange">Alcance</th>
+                                <th data-i18n="colSpecial">Special</th>
+                                <th data-i18n="colDescription">Descripción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="spellsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const i18n = {
+            es: {
+                title: "Convertidor de Hechizos",
+                subtitle: "Convierte hechizos de DND5e a Shadows of the Demon Lord",
+                input: "📥 Entrada (DND5e)",
+                fileLabel: "Cargar archivo JSON",
+                pasteLabel: "O pegar JSON directamente",
+                pasteBtn: "📋 Pegar desde portapapeles",
+                inputPlaceholder: "Pega aquí el JSON exportado de DND5e...",
+                convertBtn: "🔄 Convertir",
+                clearBtn: "🗑️ Limpiar",
+                output: "📤 Salida (SotDL)",
+                outputPlaceholder: "El JSON convertido aparecerá aquí...",
+                downloadBtn: "⬇️ Descargar JSON",
+                copyBtn: "📋 Copiar al portapapeles",
+                preview: "📊 Previsualización de Hechizos Convertidos",
+                converting: "Convirtiendo hechizos...",
+                colName: "Nombre",
+                colRank: "Rango",
+                colTradition: "Tradición",
+                colType: "Tipo",
+                colAttack: "Atributo",
+                colDefense: "Defensa",
+                colDamage: "Daño",
+                colTarget: "Objetivo",
+                colArea: "Área",
+                colDuration: "Duración",
+                colRequirements: "Requisitos",
+                colRange: "Alcance",
+                colSpecial: "Special",
+                colDescription: "Descripción",
+                msgClipboard: "✅ Texto pegado desde portapapeles",
+                msgClipboardError: "❌ No se pudo acceder al portapapeles",
+                msgCleared: "Entrada limpiada",
+                msgEmptyInput: "❌ Pega un JSON válido primero",
+                msgNoSpells: "❌ No se encontraron hechizos en el JSON",
+                msgConverted: "✅ {count} hechizos convertidos exitosamente",
+                msgError: "❌ Error: {error}",
+                msgDownloaded: "✅ Archivo descargado",
+                msgCopied: "✅ Copiado al portapapeles",
+                msgCopyError: "❌ No se pudo copiar",
+                totalSpells: "Total de Hechizos",
+                uniqueTraditions: "Tradiciones Únicas",
+                attackSpells: "Hechizos de Ataque"
+            },
+            en: {
+                title: "Spell Converter",
+                subtitle: "Convert spells from DND5e to Shadows of the Demon Lord",
+                input: "📥 Input (DND5e)",
+                fileLabel: "Load JSON file",
+                pasteLabel: "Or paste JSON directly",
+                pasteBtn: "📋 Paste from clipboard",
+                inputPlaceholder: "Paste the exported DND5e JSON here...",
+                convertBtn: "🔄 Convert",
+                clearBtn: "🗑️ Clear",
+                output: "📤 Output (SotDL)",
+                outputPlaceholder: "The converted JSON will appear here...",
+                downloadBtn: "⬇️ Download JSON",
+                copyBtn: "📋 Copy to clipboard",
+                preview: "📊 Preview of Converted Spells",
+                converting: "Converting spells...",
+                colName: "Name",
+                colRank: "Rank",
+                colTradition: "Tradition",
+                colType: "Type",
+                colAttack: "Attribute",
+                colDefense: "Defense",
+                colDamage: "Damage",
+                colTarget: "Target",
+                colArea: "Area",
+                colDuration: "Duration",
+                colRequirements: "Requirements",
+                colRange: "Range",
+                colSpecial: "Special",
+                colDescription: "Description",
+                msgClipboard: "✅ Text pasted from clipboard",
+                msgClipboardError: "❌ Could not access clipboard",
+                msgCleared: "Input cleared",
+                msgEmptyInput: "❌ Paste a valid JSON first",
+                msgNoSpells: "❌ No spells found in JSON",
+                msgConverted: "✅ {count} spells converted successfully",
+                msgError: "❌ Error: {error}",
+                msgDownloaded: "✅ File downloaded",
+                msgCopied: "✅ Copied to clipboard",
+                msgCopyError: "❌ Could not copy",
+                totalSpells: "Total Spells",
+                uniqueTraditions: "Unique Traditions",
+                attackSpells: "Attack Spells"
+            }
+        };
+
+        let currentLang = 'es';
+        let convertedSpells = [];
+
+        function switchLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.textContent = i18n[lang][key];
+            });
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                el.placeholder = i18n[lang][key];
+            });
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-lang="${lang}"]`).classList.add('active');
+        }
+
+        function getText(key) {
+            return i18n[currentLang][key];
+        }
+
+        const schoolToTradition = { "evocation": "Battle", "evo": "Battle", "abjuration": "Protection", "abj": "Protection", "conjuration": "Summoning", "con": "Summoning", "divination": "Divination", "div": "Divination", "enchantment": "Enchantment", "enc": "Enchantment", "illusion": "Illusion", "ill": "Illusion", "necromancy": "Necromancy", "nec": "Necromancy", "transmutation": "Alteration", "trs": "Alteration", "alteration": "Alteration" };
+        
+        const abilityToAttribute = { "str": "Strength", "dex": "Agility", "con": "Strength", "int": "Intellect", "wis": "Perception", "cha": "Will" };
+        
+        const damageTypeMap = { "piercing": "physical", "slashing": "physical", "bludgeoning": "physical", "fire": "fire", "cold": "cold", "lightning": "lightning", "acid": "acid", "poison": "poison", "necrotic": "necrotic", "radiant": "light", "psychic": "psychic", "force": "physical", "thunder": "physical", "shadow": "shadow", "healing": "healing" };
+        
+        const schoolMap = { "evocation": "evocation", "evo": "evocation", "abjuration": "abjuration", "abj": "abjuration", "conjuration": "conjuration", "con": "conjuration", "divination": "divination", "div": "divination", "enchantment": "enchantment", "enc": "enchantment", "illusion": "illusion", "ill": "illusion", "necromancy": "necromancy", "nec": "necromancy", "transmutation": "transmutation", "trs": "transmutation", "curse": "curse", "forbidden": "forbidden" };
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('inputJSON').value = event.target.result;
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function showMessage(text, type = 'info') {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = `message ${type}`;
+            setTimeout(() => { msg.className = 'message'; }, 5000);
+        }
+
+        function pasteFromClipboard() {
+            navigator.clipboard.readText().then(text => {
+                document.getElementById('inputJSON').value = text;
+                showMessage(getText('msgClipboard'), 'success');
+            }).catch(() => {
+                showMessage(getText('msgClipboardError'), 'error');
+            });
+        }
+
+        function clearInput() {
+            document.getElementById('inputJSON').value = '';
+            document.getElementById('outputJSON').value = '';
+            document.getElementById('outputSection').style.display = 'none';
+            document.getElementById('tableSection').style.display = 'none';
+            showMessage(getText('msgCleared'), 'info');
+        }
+
+        function generateId() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < 16; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        function convertirDadosEnPlaintext(texto) {
+            if (!texto) return texto;
+            
+            let result = texto;
+            
+            // Primero marcamos los [[/r ...]] existentes como "protegidos"
+            const protected_rolls = [];
+            const protectedRegex = /\[\[\/r\s*[^\]]*\]\]/gi;
+            let match;
+            while ((match = protectedRegex.exec(result)) !== null) {
+                protected_rolls.push({ text: match[0], index: match.index });
+            }
+            
+            // Reemplazamos los protegidos con placeholders
+            protected_rolls.reverse().forEach((item, idx) => {
+                const placeholder = `__PROTECTED_ROLL_${idx}__`;
+                result = result.substring(0, item.index) + placeholder + result.substring(item.index + item.text.length);
+            });
+            
+            // Ahora convertimos los dados no protegidos
+            const dice_regex = /\b(\d*d\d+(?:\s*[+\-]\s*(?:\d+|d\d+))*)\b/gi;
+            result = result.replace(dice_regex, (match) => {
+                let formula = match.replace(/\s*([+\-])\s*/g, "$1");
+                formula = formula.replace(/\b(d\d+)\b/g, "1$1");
+                return `[[/r ${formula}]]`;
+            });
+            
+            // Restauramos los placeholders
+            protected_rolls.reverse().forEach((item, idx) => {
+                const placeholder = `__PROTECTED_ROLL_${idx}__`;
+                result = result.replace(placeholder, item.text);
+            });
+            
+            return result;
+        }
+
+        function convertirDadosEnHTML(texto) {
+            if (!texto) return texto;
+            
+            let result = texto;
+            
+            // Protegemos los [[/r ...]] existentes
+            const protected_rolls = [];
+            const protectedRegex = /\[\[\/r\s*[^\]]*\]\]/gi;
+            let match;
+            while ((match = protectedRegex.exec(result)) !== null) {
+                protected_rolls.push({ text: match[0], index: match.index });
+            }
+            
+            protected_rolls.reverse().forEach((item, idx) => {
+                const placeholder = `__PROTECTED_ROLL_${idx}__`;
+                result = result.substring(0, item.index) + placeholder + result.substring(item.index + item.text.length);
+            });
+            
+            // Limpiamos etiquetas HTML de dados si las hay
+            result = result.replace(/<a class="inline-roll[^>]*>.*?<\/a>/gi, (m) => {
+                const formula = m.match(/data-formula="([^"]+)"/);
+                return formula ? formula[1] : m;
+            });
+            
+            // Convertimos dados no protegidos
+            const dice_regex = /\b(\d*d\d+(?:\s*[+\-]\s*(?:\d+|d\d+))*)\b/gi;
+            result = result.replace(dice_regex, (match) => {
+                let formula = match.replace(/\s*([+\-])\s*/g, "$1");
+                formula = formula.replace(/\b(d\d+)\b/g, "1$1");
+                return `<a class="inline-roll roll" data-mode="roll" data-flavor="" data-formula="${formula}" data-tooltip-text="${formula}"><i class="fa-solid fa-dice-d20" inert=""></i>${match}</a>`;
+            });
+            
+            // Restauramos los protegidos
+            protected_rolls.reverse().forEach((item, idx) => {
+                const placeholder = `__PROTECTED_ROLL_${idx}__`;
+                result = result.replace(placeholder, item.text);
+            });
+            
+            return result;
+        }
+
+        function extractDamage(activity) {
+            if (!activity?.damage?.parts?.length) return '';
+            const parts = activity.damage.parts;
+            const damageStrings = parts.map(p => {
+                if (p.custom?.enabled && p.custom.formula) return p.custom.formula;
+                else if (p.number != null && p.denomination != null) return `${p.number}d${p.denomination}`;
+                else if (p.number != null) return `${p.number}`;
+                return '';
+            }).filter(str => str);
+            return damageStrings.join(' + ');
+        }
+
+        function extractDamageTypes(activity) {
+            if (!activity?.damage?.parts?.length) return [];
+            const parts = activity.damage.parts;
+            return parts.flatMap(p => p.types || []).map(t => damageTypeMap[t] || t);
+        }
+
+        function determineAttackDefense(activity, d5, damageTypes = []) {
+            const attackAbility = activity?.attack?.ability?.[0] || null;
+            const saveAbility = activity?.save?.ability?.[0] || null;
+            let attack = null;
+            let defense = null;
+
+            if (attackAbility && saveAbility) {
+                attack = abilityToAttribute[attackAbility] || 'Intellect';
+                defense = abilityToAttribute[saveAbility] || 'Will';
+                return { attack, defense };
+            }
+
+            if (!attackAbility && !saveAbility) {
+                return { attack: null, defense: null };
+            }
+
+            if (attackAbility) {
+                attack = abilityToAttribute[attackAbility] || 'Intellect';
+            } else {
+                attack = damageTypes.length > 0 ? 'Intellect' : null;
+            }
+
+            if (saveAbility) {
+                defense = abilityToAttribute[saveAbility] || 'Will';
+            } else {
+                if (damageTypes.length > 0) {
+                    const dmg = damageTypes[0];
+                    if (['physical', 'fire', 'cold', 'lightning', 'acid', 'poison'].includes(dmg)) {
+                        defense = 'Defense';
+                    } else if (['psychic', 'necrotic'].includes(dmg)) {
+                        defense = 'Will';
+                    } else if (['light', 'shadow'].includes(dmg)) {
+                        defense = 'Perception';
+                    }
+                }
+
+                if (!defense) {
+                    const school = (schoolMap[d5.school?.toLowerCase()] || d5.school?.toLowerCase());
+                    if (['enchantment', 'necromancy', 'abjuration', 'curse', 'forbidden'].includes(school)) {
+                        defense = 'Will';
+                    } else if (['illusion', 'divination'].includes(school)) {
+                        defense = 'Perception';
+                    } else if (['evocation', 'conjuration', 'transmutation'].includes(school)) {
+                        defense = 'Defense';
+                    }
+                }
+
+                if (!defense && attack) defense = 'Will';
+            }
+
+            if (attack && !defense) defense = 'Will';
+            if (defense && !attack) attack = 'Intellect';
+            return { attack, defense };
+        }
+
+        function convertRange(rangeData) {
+            if (!rangeData) return '';
+            if (rangeData.units === 'touch') return 'Touch';
+            if (rangeData.units === 'self') return 'Self';
+            if (rangeData.units === 'sight') return 'Sight';
+            if (rangeData.units === 'unlimited') return 'Unlimited';
+            const value = parseInt(rangeData.value);
+            if (isNaN(value) || value === 0) return '';
+            if (rangeData.units === 'km') return `${value} km`;
+            if (rangeData.units === 'ft') {
+                const yards = Math.round(value / 3);
+                return `${yards} yd`;
+            }
+            if (rangeData.units === 'm') {
+                const yards = Math.round(value * 1.09);
+                return `${yards} yd`;
+            }
+            return `${value} ${rangeData.units}`;
+        }
+
+        function normalizeDuration(durationData) {
+            if (!durationData || !durationData.value) return 'Instantaneous';
+            if (durationData.units === 'inst') return 'Instantaneous';
+            const value = durationData.value;
+            const units = durationData.units;
+            const unitMap = { 'round': 'round', 'minute': 'minute', 'hour': 'hour', 'day': 'day', 'week': 'week', 'month': 'month', 'year': 'year' };
+            const normalizedUnit = unitMap[units] || units;
+            let result = `${value} ${normalizedUnit}${value > 1 ? 's' : ''}`;
+            result = result.replace(/@item\.level/gi, 'spell level');
+            return result;
+        }
+
+        function convertAreaOfEffect(templateData) {
+            if (!templateData) return '';
+            const type = templateData.type || '';
+            const size = templateData.size || '';
+            const units = templateData.units || '';
+            const typeMap = { 'cone': 'Cone', 'line': 'Line', 'cube': 'Cube', 'sphere': 'Sphere', 'cylinder': 'Cylinder', 'square': 'Square' };
+            const normalizedType = typeMap[type] || type;
+            let result = '';
+            if (size) {
+                let displaySize = size;
+                let displayUnits = units;
+                if (units === 'ft') {
+                    const feet = parseInt(size);
+                    if (!isNaN(feet)) {
+                        const yards = Math.round(feet / 3);
+                        displaySize = `${yards}`;
+                        displayUnits = 'yd';
+                    }
+                }
+                result = `${normalizedType} (${displaySize} ${displayUnits})`;
+            } else {
+                result = normalizedType;
+            }
+            result = result.replace(/@item\.level/gi, 'spell level');
+            return result;
+        }
+
+        function convertTarget(targetData, rangeValue) {
+            if (!targetData?.affects) return '';
+            const affects = targetData.affects;
+            let type = affects.type || '';
+            type = type.replace(/creatureOrObject/gi, 'creature or object');
+            const parts = [];
+            if (affects.count) parts.push(`${affects.count}`);
+            if (type) parts.push(type);
+            if (affects.special) parts.push(affects.special);
+            let result = parts.filter(p => p).join(' ');
+            result = result.replace(/@item\.level/gi, 'spell level');
+            if (rangeValue) {
+                result = result ? `${result}, Range: ${rangeValue}` : `Range: ${rangeValue}`;
+            }
+            return result;
+        }
+
+        function getComponents(d5System) {
+            const components = [];
+            if (d5System.properties?.includes("vocal")) components.push("Vocal (V)");
+            if (d5System.properties?.includes("somatic")) components.push("Somatic (S)");
+            if (d5System.properties?.includes("material")) components.push("Material (M)");
+            return components.join(", ");
+        }
+
+        function extractScaling(activity, description) {
+            if (!activity?.damage?.parts) return '';
+            if (description && description.includes("Higher Levels")) {
+                const higherLevelsIndex = description.indexOf("At Higher Levels");
+                const afterText = description.substring(higherLevelsIndex, higherLevelsIndex + 300);
+                const cleanText = afterText.replace(/<[^>]*>/g, '').replace(/&Reference\[[^\]]*\]/g, '');
+                return cleanText.substring(0, 200);
+            }
+            return '';
+        }
+
+        function getConcentration(activity) {
+            return activity?.duration?.concentration ? "Requires Concentration" : '';
+        }
+
+        function convertSpellLevel(dndLevel) {
+            return Math.min(10, dndLevel);
+        }
+
+        function hasRitual(d5System) {
+            return d5System.properties?.includes("ritual") ? "Ritual" : '';
+        }
+
+        function convertSpell(dnd5eSpell) {
+            const d5 = dnd5eSpell.system;
+            const activity = Object.values(d5.activities || {})[0] || {};
+            let requirements = getComponents(d5);
+            const materials = d5.materials?.value || '';
+            if (materials) {
+                requirements = requirements ? `${requirements}. ${materials}` : materials;
+            }
+            const special = [getConcentration(activity), hasRitual(d5), extractScaling(activity, d5.description?.value)].filter(s => s).join(". ");
+            const damageTypes = extractDamageTypes(activity);
+            const { attack: attackAttr, defense: defenseAttr } = determineAttackDefense(activity, d5, damageTypes);
+            const isHealingOnly = activity.damage?.parts?.length > 0 && activity.damage.parts.every(p => p.types?.every(t => t === 'healing'));
+            const spellType = (activity.damage?.parts?.length && !isHealingOnly) ? "Attack" : "Utility";
+            const now = Date.now();
+            const rangeValue = convertRange(d5.range);
+            const rawDescription = d5.description?.value || '';
+            const description = convertirDadosEnPlaintext(rawDescription);
+            const enrichedDescription = convertirDadosEnHTML(rawDescription);
+
+            return {
+                name: dnd5eSpell.name,
+                type: "spell",
+                img: dnd5eSpell.img || "systems/demonlord/assets/icons/skills/spellbook.webp",
+                folder: null,
+                system: {
+                    description: description,
+                    action: {
+                        active: true,
+                        against: defenseAttr || "",
+                        damageactive: !!activity.damage?.parts?.length,
+                        damage: extractDamage(activity),
+                        damagetype: damageTypes[0] || "",
+                        boonsbanesactive: true,
+                        boonsbanes: "",
+                        plus20active: true,
+                        plus20: "",
+                        plus20damage: "",
+                        defense: defenseAttr || "",
+                        defenseboonsbanes: "",
+                        damagetypes: damageTypes,
+                        strengthboonsbanesselect: false,
+                        agilityboonsbanesselect: false,
+                        intellectboonsbanesselect: false,
+                        willboonsbanesselect: false,
+                        perceptionboonsbanesselect: false,
+                        extraboonsbanes: "",
+                        extradamage: "",
+                        extraplus20damage: "",
+                        attack: attackAttr || "",
+                        rollbonus: "",
+                        extraEffect: "",
+                        extraEffect20: ""
+                    },
+                    activatedEffect: {
+                        activation: { type: "", cost: 0 },
+                        duration: { value: 0, type: "" },
+                        target: { value: "", type: "" },
+                        texture: "",
+                        range: "",
+                        uses: { value: 0, max: 0, per: "" }
+                    },
+                    tradition: schoolToTradition[d5.school] || "Battle",
+                    edit: false,
+                    spelltype: spellType,
+                    rank: convertSpellLevel(d5.level),
+                    attribute: "intellect",
+                    effectdice: "",
+                    castings: { value: "", max: "", ignoreCalculation: false },
+                    duration: normalizeDuration(d5.duration),
+                    target: convertTarget(d5.target, rangeValue),
+                    area: convertAreaOfEffect(d5.target?.template),
+                    range: rangeValue,
+                    requirements: requirements,
+                    sacrifice: "",
+                    permanence: "",
+                    aftereffect: "",
+                    special: special,
+                    triggered: "",
+                    roundsleft: 0,
+                    healing: { healactive: true, healing: false, rate: "" },
+                    quantity: 1,
+                    enrichedDescription: enrichedDescription,
+                    source: ""
+                },
+                effects: [],
+                flags: {},
+                _stats: {
+                    coreVersion: "13.350",
+                    systemId: "demonlord",
+                    systemVersion: "5.3.1",
+                    createdTime: now,
+                    modifiedTime: now,
+                    lastModifiedBy: generateId()
+                },
+                ownership: { default: 0 },
+                _id: generateId()
+            };
+        }
+
+        function convertSpells() {
+            try {
+                document.getElementById('loading').style.display = 'block';
+                const inputText = document.getElementById('inputJSON').value.trim();
+                if (!inputText) {
+                    showMessage(getText('msgEmptyInput'), 'error');
+                    document.getElementById('loading').style.display = 'none';
+                    return;
+                }
+                const data = JSON.parse(inputText);
+                const spells = data.items || [];
+                if (spells.length === 0) {
+                    showMessage(getText('msgNoSpells'), 'error');
+                    document.getElementById('loading').style.display = 'none';
+                    return;
+                }
+                convertedSpells = spells.filter(s => s.type === 'spell').map(convertSpell);
+                const packageName = `converted-spells-${Date.now()}`;
+                const output = {
+                    package: `world.${packageName}`,
+                    metadata: {
+                        label: "Converted Spells",
+                        type: "Item",
+                        name: packageName,
+                        path: `packs/${packageName}`,
+                        system: "demonlord",
+                        ownership: { PLAYER: "OBSERVER", ASSISTANT: "OWNER" },
+                        flags: {},
+                        package: "world",
+                        id: `world.${packageName}`,
+                        packageType: "world",
+                        packageName: "sotdl-mon"
+                    },
+                    type: "Item",
+                    items: convertedSpells,
+                    source: {
+                        world: "sotdl-mon",
+                        system: "demonlord",
+                        version: { core: "13.350", system: "5.3.1" }
+                    },
+                    folders: []
+                };
+                document.getElementById('outputJSON').value = JSON.stringify(output, null, 2);
+                document.getElementById('outputSection').style.display = 'block';
+                document.getElementById('tableSection').style.display = 'block';
+                renderTable();
+                renderStats(convertedSpells);
+                showMessage(getText('msgConverted').replace('{count}', convertedSpells.length), 'success');
+            } catch (error) {
+                showMessage(getText('msgError').replace('{error}', error.message), 'error');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('spellsTableBody');
+            tbody.innerHTML = '';
+            convertedSpells.forEach(spell => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><span class="spell-name">${spell.name}</span></td>
+                    <td><span class="badge badge-tradition">${spell.system.rank}</span></td>
+                    <td><span class="badge badge-tradition">${spell.system.tradition}</span></td>
+                    <td><span class="badge badge-spelltype">${spell.system.spelltype}</span></td>
+                    <td>${spell.system.action.attack || '-'}</td>
+                    <td>${spell.system.action.defense || '-'}</td>
+                    <td>${spell.system.action.damage ? `<span class="badge badge-damage">${spell.system.action.damage}</span>` : '-'}</td>
+                    <td>${spell.system.target || '-'}</td>
+                    <td>${spell.system.area || '-'}</td>
+                    <td>${spell.system.duration || 'Instantaneous'}</td>
+                    <td>${spell.system.requirements || '-'}</td>
+                    <td>${spell.system.range || '-'}</td>
+                    <td>${spell.system.special || '-'}</td>
+                    <td><div class="description-cell">${spell.system.description.replace(/<[^>]*>/g, '') || '-'}</div></td>
+                `;
+                tbody.appendChild(row);
+            });
+            document.getElementById('spellCount').textContent = convertedSpells.length;
+        }
+
+        function renderStats(spells) {
+            const stats = document.getElementById('stats');
+            const traditions = new Set(spells.map(s => s.system.tradition)).size;
+            const attacks = spells.filter(s => s.system.spelltype === 'Attack').length;
+            stats.innerHTML = `
+                <div class="stat-box">
+                    <div class="stat-label">${getText('totalSpells')}</div>
+                    <div class="stat-value">${spells.length}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">${getText('uniqueTraditions')}</div>
+                    <div class="stat-value">${traditions}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">${getText('attackSpells')}</div>
+                    <div class="stat-value">${attacks}</div>
+                </div>
+            `;
+        }
+
+        function downloadJSON() {
+            try {
+                const packageName = `converted-spells-${Date.now()}`;
+                const output = {
+                    package: `world.${packageName}`,
+                    metadata: {
+                        label: "Converted Spells",
+                        type: "Item",
+                        name: packageName,
+                        path: `packs/${packageName}`,
+                        system: "demonlord",
+                        ownership: { PLAYER: "OBSERVER", ASSISTANT: "OWNER" },
+                        flags: {},
+                        package: "world",
+                        id: `world.${packageName}`,
+                        packageType: "world",
+                        packageName: "sotdl-mon"
+                    },
+                    type: "Item",
+                    items: convertedSpells,
+                    source: {
+                        world: "sotdl-mon",
+                        system: "demonlord",
+                        version: { core: "13.350", system: "5.3.1" }
+                    },
+                    folders: []
+                };
+                const json = JSON.stringify(output, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `spells_sotdl_${new Date().toISOString().slice(0,10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                showMessage(getText('msgDownloaded'), 'success');
+            } catch (error) {
+                showMessage(getText('msgError').replace('{error}', error.message), 'error');
+            }
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById('outputJSON').value;
+            navigator.clipboard.writeText(text).then(() => {
+                showMessage(getText('msgCopied'), 'success');
+            }).catch(() => {
+                showMessage(getText('msgCopyError'), 'error');
+            });
+        }
+
+        // Inicializar idioma
+        switchLanguage('es');
+    </script>
+</body>
+</html>
