@@ -1,70 +1,435 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Convertidor de Hechizos DND5e → SotDL</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); background-attachment: fixed; min-height: 100vh; padding: 20px; color: #e0e0e0; position: relative; overflow-x: hidden; }
-        body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: radial-gradient(circle at 20% 50%, rgba(139, 69, 19, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(184, 134, 11, 0.1) 0%, transparent 50%); pointer-events: none; z-index: 0; }
-        .container { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; }
-        .lang-toggle { position: fixed; top: 20px; right: 20px; z-index: 100; }
-        .lang-btn { padding: 8px 16px; border: 1px solid #b8860b; border-radius: 4px; background: linear-gradient(135deg, #8b4513, #a0522d); color: #f4d03f; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
-        .lang-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(184, 134, 11, 0.5); }
-        .lang-btn.active { background: linear-gradient(135deg, #a0522d, #8b4513); box-shadow: 0 0 15px rgba(244, 208, 63, 0.6); }
-        .header { text-align: center; color: #f4d03f; margin-bottom: 30px; text-shadow: 2px 2px 4px rgba(0,0,0,0.7); }
-        .header h1 { font-size: 32px; margin-bottom: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; background: linear-gradient(135deg, #f4d03f, #f39c12); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .header p { font-size: 14px; opacity: 0.85; color: #c0a080; }
-        .card { background: linear-gradient(135deg, #2a2a3e 0%, #1f1f2e 100%); border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(139, 69, 19, 0.3); border: 1px solid rgba(184, 134, 11, 0.2); backdrop-filter: blur(10px); }
-        .section-title { font-size: 18px; font-weight: 600; color: #f4d03f; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; text-transform: uppercase; letter-spacing: 1px; }
-        .section-title::before { content: ''; width: 4px; height: 24px; background: linear-gradient(135deg, #f4d03f, #f39c12); border-radius: 2px; box-shadow: 0 0 10px rgba(244, 208, 63, 0.5); }
-        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .control-group { display: flex; flex-direction: column; gap: 8px; }
-        .control-group label { font-size: 13px; font-weight: 600; color: #c0a080; }
-        button { padding: 10px 20px; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .btn-primary { background: linear-gradient(135deg, #8b4513, #a0522d); color: #f4d03f; border: 1px solid #b8860b; box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3); }
-        .btn-primary:hover { background: linear-gradient(135deg, #a0522d, #8b4513); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(184, 134, 11, 0.5); text-shadow: 0 0 10px rgba(244, 208, 63, 0.5); }
-        .btn-success { background: linear-gradient(135deg, #27662a, #2d7e3a); color: #a8e6b8; border: 1px solid #4a9d6f; box-shadow: 0 4px 15px rgba(39, 102, 42, 0.3); }
-        .btn-success:hover { background: linear-gradient(135deg, #2d7e3a, #27662a); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(74, 157, 111, 0.5); }
-        .btn-danger { background: linear-gradient(135deg, #662727, #8b3a3a); color: #f4a8a8; border: 1px solid #b84a4a; box-shadow: 0 4px 15px rgba(102, 39, 39, 0.3); }
-        .btn-danger:hover { background: linear-gradient(135deg, #8b3a3a, #662727); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(184, 74, 74, 0.5); }
-        input[type="file"], textarea { padding: 10px; border: 1px solid #8b6914; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 12px; background: #1a1a2e; color: #c0a080; }
-        input[type="file"]::file-selector-button { background: linear-gradient(135deg, #8b4513, #a0522d); color: #f4d03f; border: 1px solid #b8860b; padding: 5px 15px; border-radius: 3px; cursor: pointer; font-weight: 600; }
-        textarea { resize: vertical; min-height: 150px; width: 100%; }
-        textarea:focus { outline: none; border-color: #f4d03f; box-shadow: 0 0 10px rgba(244, 208, 63, 0.3); }
-        .button-group { display: flex; gap: 10px; flex-wrap: wrap; }
-        .message { padding: 12px; border-radius: 4px; margin-bottom: 15px; display: none; }
-        .message.success { background: rgba(39, 102, 42, 0.2); color: #a8e6b8; border-left: 4px solid #27662a; display: block; }
-        .message.error { background: rgba(102, 39, 39, 0.2); color: #f4a8a8; border-left: 4px solid #662727; display: block; }
-        .message.info { background: rgba(184, 134, 11, 0.2); color: #f4d03f; border-left: 4px solid #b8860b; display: block; }
-        .table-container { overflow-x: auto; scroll-behavior: smooth; max-height: 600px; overflow-y: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        thead { background: rgba(184, 134, 11, 0.1); border-bottom: 2px solid #8b6914; position: sticky; top: 0; }
-        th { padding: 12px; text-align: left; font-weight: 600; color: #f4d03f; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
-        td { padding: 12px; border-bottom: 1px solid #8b6914; font-size: 12px; color: #c0a080; }
-        tbody tr:hover { background: rgba(184, 134, 11, 0.05); }
-        .spell-name { font-weight: 600; color: #f4d03f; }
-        .badge { display: inline-block; padding: 4px 8px; border-radius: 3px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        .description-cell { max-width: 300px; word-wrap: break-word; white-space: normal; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
-        .badge-tradition { background: rgba(27, 94, 32, 0.3); color: #a8e6b8; border: 1px solid #27662a; }
-        .badge-spelltype { background: rgba(184, 134, 11, 0.3); color: #f4d03f; border: 1px solid #8b6914; }
-        .badge-damage { background: rgba(139, 69, 19, 0.3); color: #f4a8a8; border: 1px solid #8b4513; }
-        .loading { display: none; text-align: center; padding: 20px; }
-        .spinner { border: 3px solid #8b6914; border-top: 3px solid #f4d03f; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto; box-shadow: 0 0 10px rgba(244, 208, 63, 0.5); }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .loading p { color: #f4d03f; }
-        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-        .stat-box { background: rgba(184, 134, 11, 0.1); padding: 15px; border-radius: 4px; border: 1px solid #8b6914; }
-        .stat-label { font-size: 12px; color: #c0a080; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .stat-value { font-size: 24px; font-weight: 700; color: #f4d03f; text-shadow: 0 0 10px rgba(244, 208, 63, 0.3); }
-        @media (max-width: 768px) { .controls { grid-template-columns: 1fr; } .stats { grid-template-columns: 1fr; } .lang-toggle { top: 10px; right: 10px; } }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle at 20% 50%, rgba(139, 69, 19, 0.1) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(184, 134, 11, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .lang-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+
+        .lang-btn {
+            padding: 8px 16px;
+            border: 1px solid #b8860b;
+            border-radius: 4px;
+            background: linear-gradient(135deg, #8b4513, #a0522d);
+            color: #f4d03f;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .lang-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(184, 134, 11, 0.5);
+        }
+
+        .lang-btn.active {
+            background: linear-gradient(135deg, #a0522d, #8b4513);
+            box-shadow: 0 0 15px rgba(244, 208, 63, 0.6);
+        }
+
+        .header {
+            text-align: center;
+            color: #f4d03f;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #f4d03f, #f39c12);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.85;
+            color: #c0a080;
+        }
+
+        .card {
+            background: linear-gradient(135deg, #2a2a3e 0%, #1f1f2e 100%);
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(139, 69, 19, 0.3);
+            border: 1px solid rgba(184, 134, 11, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f4d03f;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(135deg, #f4d03f, #f39c12);
+            border-radius: 2px;
+            box-shadow: 0 0 10px rgba(244, 208, 63, 0.5);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #c0a080;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #8b4513, #a0522d);
+            color: #f4d03f;
+            border: 1px solid #b8860b;
+            box-shadow: 0 4px 15px rgba(139, 69, 19, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #a0522d, #8b4513);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(184, 134, 11, 0.5);
+            text-shadow: 0 0 10px rgba(244, 208, 63, 0.5);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #27662a, #2d7e3a);
+            color: #a8e6b8;
+            border: 1px solid #4a9d6f;
+            box-shadow: 0 4px 15px rgba(39, 102, 42, 0.3);
+        }
+
+        .btn-success:hover {
+            background: linear-gradient(135deg, #2d7e3a, #27662a);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 157, 111, 0.5);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #662727, #8b3a3a);
+            color: #f4a8a8;
+            border: 1px solid #b84a4a;
+            box-shadow: 0 4px 15px rgba(102, 39, 39, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: linear-gradient(135deg, #8b3a3a, #662727);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(184, 74, 74, 0.5);
+        }
+
+        input[type="file"],
+        textarea {
+            padding: 10px;
+            border: 1px solid #8b6914;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            background: #1a1a2e;
+            color: #c0a080;
+        }
+
+        input[type="file"]::file-selector-button {
+            background: linear-gradient(135deg, #8b4513, #a0522d);
+            color: #f4d03f;
+            border: 1px solid #b8860b;
+            padding: 5px 15px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 150px;
+            width: 100%;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #f4d03f;
+            box-shadow: 0 0 10px rgba(244, 208, 63, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .message {
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .message.success {
+            background: rgba(39, 102, 42, 0.2);
+            color: #a8e6b8;
+            border-left: 4px solid #27662a;
+            display: block;
+        }
+
+        .message.error {
+            background: rgba(102, 39, 39, 0.2);
+            color: #f4a8a8;
+            border-left: 4px solid #662727;
+            display: block;
+        }
+
+        .message.info {
+            background: rgba(184, 134, 11, 0.2);
+            color: #f4d03f;
+            border-left: 4px solid #b8860b;
+            display: block;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: rgba(184, 134, 11, 0.1);
+            border-bottom: 2px solid #8b6914;
+            position: sticky;
+            top: 0;
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #f4d03f;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #8b6914;
+            font-size: 12px;
+            color: #c0a080;
+        }
+
+        tbody tr:hover {
+            background: rgba(184, 134, 11, 0.05);
+        }
+
+        .spell-name {
+            font-weight: 600;
+            color: #f4d03f;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .description-cell {
+            max-width: 300px;
+            word-wrap: break-word;
+            white-space: normal;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+
+        .badge-tradition {
+            background: rgba(27, 94, 32, 0.3);
+            color: #a8e6b8;
+            border: 1px solid #27662a;
+        }
+
+        .badge-spelltype {
+            background: rgba(184, 134, 11, 0.3);
+            color: #f4d03f;
+            border: 1px solid #8b6914;
+        }
+
+        .badge-damage {
+            background: rgba(139, 69, 19, 0.3);
+            color: #f4a8a8;
+            border: 1px solid #8b4513;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #8b6914;
+            border-top: 3px solid #f4d03f;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+            box-shadow: 0 0 10px rgba(244, 208, 63, 0.5);
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading p {
+            color: #f4d03f;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: rgba(184, 134, 11, 0.1);
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #8b6914;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #c0a080;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #f4d03f;
+            text-shadow: 0 0 10px rgba(244, 208, 63, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .lang-toggle {
+                top: 10px;
+                right: 10px;
+            }
+        }
     </style>
 </head>
+
 <body>
     <div class="lang-toggle">
-        <button class="lang-btn active" data-lang="es" onclick="switchLanguage('es')">Español</button>
-        <button class="lang-btn" data-lang="en" onclick="switchLanguage('en')">English</button>
+        <button class="lang-btn" data-lang="es" onclick="switchLanguage('es')">Español</button>
+        <button class="lang-btn active" data-lang="en" onclick="switchLanguage('en')">English</button>
     </div>
 
     <div class="container">
@@ -81,7 +446,8 @@
                 </div>
                 <div class="control-group">
                     <label data-i18n="pasteLabel">O pegar JSON directamente</label>
-                    <button class="btn-primary" onclick="pasteFromClipboard()" data-i18n="pasteBtn">📋 Pegar desde portapapeles</button>
+                    <button class="btn-primary" onclick="pasteFromClipboard()" data-i18n="pasteBtn">📋 Pegar desde
+                        portapapeles</button>
                 </div>
             </div>
             <textarea id="inputJSON" data-i18n-placeholder="inputPlaceholder"></textarea>
@@ -100,12 +466,14 @@
             <div class="stats" id="stats"></div>
             <div class="button-group" style="margin-bottom: 20px;">
                 <button class="btn-success" onclick="downloadJSON()" data-i18n="downloadBtn">⬇️ Descargar JSON</button>
-                <button class="btn-primary" onclick="copyToClipboard()" data-i18n="copyBtn">📋 Copiar al portapapeles</button>
+                <button class="btn-primary" onclick="copyToClipboard()" data-i18n="copyBtn">📋 Copiar al
+                    portapapeles</button>
             </div>
             <textarea id="outputJSON" data-i18n-placeholder="outputPlaceholder" readonly></textarea>
         </div>
         <div class="card" id="tableSection" style="display: none;">
-            <div class="section-title"><span data-i18n="preview">📊 Previsualización de Hechizos Convertidos</span> (<span id="spellCount">0</span>)</div>
+            <div class="section-title"><span data-i18n="preview">📊 Previsualización de Hechizos Convertidos</span>
+                (<span id="spellCount">0</span>)</div>
             <div class="table-wrapper">
                 <div class="table-container" id="tableContainer">
                     <table id="spellsTable">
@@ -226,7 +594,7 @@
             }
         };
 
-        let currentLang = 'es';
+        let currentLang = 'en';
         let convertedSpells = [];
 
         function switchLanguage(lang) {
@@ -250,18 +618,18 @@
         }
 
         const schoolToTradition = { "evocation": "Battle", "evo": "Battle", "abjuration": "Protection", "abj": "Protection", "conjuration": "Summoning", "con": "Summoning", "divination": "Divination", "div": "Divination", "enchantment": "Enchantment", "enc": "Enchantment", "illusion": "Illusion", "ill": "Illusion", "necromancy": "Necromancy", "nec": "Necromancy", "transmutation": "Alteration", "trs": "Alteration", "alteration": "Alteration" };
-        
+
         const abilityToAttribute = { "str": "Strength", "dex": "Agility", "con": "Strength", "int": "Intellect", "wis": "Perception", "cha": "Will" };
-        
+
         const damageTypeMap = { "piercing": "physical", "slashing": "physical", "bludgeoning": "physical", "fire": "fire", "cold": "cold", "lightning": "lightning", "acid": "acid", "poison": "poison", "necrotic": "necrotic", "radiant": "light", "psychic": "psychic", "force": "physical", "thunder": "physical", "shadow": "shadow", "healing": "healing" };
-        
+
         const schoolMap = { "evocation": "evocation", "evo": "evocation", "abjuration": "abjuration", "abj": "abjuration", "conjuration": "conjuration", "con": "conjuration", "divination": "divination", "div": "divination", "enchantment": "enchantment", "enc": "enchantment", "illusion": "illusion", "ill": "illusion", "necromancy": "necromancy", "nec": "necromancy", "transmutation": "transmutation", "trs": "transmutation", "curse": "curse", "forbidden": "forbidden" };
 
-        document.getElementById('fileInput').addEventListener('change', function(e) {
+        document.getElementById('fileInput').addEventListener('change', function (e) {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(event) {
+                reader.onload = function (event) {
                     document.getElementById('inputJSON').value = event.target.result;
                 };
                 reader.readAsText(file);
@@ -303,9 +671,9 @@
 
         function convertirDadosEnPlaintext(texto) {
             if (!texto) return texto;
-            
+
             let result = texto;
-            
+
             // Primero marcamos los [[/r ...]] existentes como "protegidos"
             const protected_rolls = [];
             const protectedRegex = /\[\[\/r\s*[^\]]*\]\]/gi;
@@ -313,13 +681,13 @@
             while ((match = protectedRegex.exec(result)) !== null) {
                 protected_rolls.push({ text: match[0], index: match.index });
             }
-            
+
             // Reemplazamos los protegidos con placeholders
             protected_rolls.reverse().forEach((item, idx) => {
                 const placeholder = `__PROTECTED_ROLL_${idx}__`;
                 result = result.substring(0, item.index) + placeholder + result.substring(item.index + item.text.length);
             });
-            
+
             // Ahora convertimos los dados no protegidos
             const dice_regex = /\b(\d*d\d+(?:\s*[+\-]\s*(?:\d+|d\d+))*)\b/gi;
             result = result.replace(dice_regex, (match) => {
@@ -327,21 +695,21 @@
                 formula = formula.replace(/\b(d\d+)\b/g, "1$1");
                 return `[[/r ${formula}]]`;
             });
-            
+
             // Restauramos los placeholders
             protected_rolls.reverse().forEach((item, idx) => {
                 const placeholder = `__PROTECTED_ROLL_${idx}__`;
                 result = result.replace(placeholder, item.text);
             });
-            
+
             return result;
         }
 
         function convertirDadosEnHTML(texto) {
             if (!texto) return texto;
-            
+
             let result = texto;
-            
+
             // Protegemos los [[/r ...]] existentes
             const protected_rolls = [];
             const protectedRegex = /\[\[\/r\s*[^\]]*\]\]/gi;
@@ -349,18 +717,18 @@
             while ((match = protectedRegex.exec(result)) !== null) {
                 protected_rolls.push({ text: match[0], index: match.index });
             }
-            
+
             protected_rolls.reverse().forEach((item, idx) => {
                 const placeholder = `__PROTECTED_ROLL_${idx}__`;
                 result = result.substring(0, item.index) + placeholder + result.substring(item.index + item.text.length);
             });
-            
+
             // Limpiamos etiquetas HTML de dados si las hay
             result = result.replace(/<a class="inline-roll[^>]*>.*?<\/a>/gi, (m) => {
                 const formula = m.match(/data-formula="([^"]+)"/);
                 return formula ? formula[1] : m;
             });
-            
+
             // Convertimos dados no protegidos
             const dice_regex = /\b(\d*d\d+(?:\s*[+\-]\s*(?:\d+|d\d+))*)\b/gi;
             result = result.replace(dice_regex, (match) => {
@@ -368,13 +736,13 @@
                 formula = formula.replace(/\b(d\d+)\b/g, "1$1");
                 return `<a class="inline-roll roll" data-mode="roll" data-flavor="" data-formula="${formula}" data-tooltip-text="${formula}"><i class="fa-solid fa-dice-d20" inert=""></i>${match}</a>`;
             });
-            
+
             // Restauramos los protegidos
             protected_rolls.reverse().forEach((item, idx) => {
                 const placeholder = `__PROTECTED_ROLL_${idx}__`;
                 result = result.replace(placeholder, item.text);
             });
-            
+
             return result;
         }
 
@@ -790,7 +1158,7 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `spells_sotdl_${new Date().toISOString().slice(0,10)}.json`;
+                a.download = `spells_sotdl_${new Date().toISOString().slice(0, 10)}.json`;
                 a.click();
                 URL.revokeObjectURL(url);
                 showMessage(getText('msgDownloaded'), 'success');
@@ -809,7 +1177,8 @@
         }
 
         // Inicializar idioma
-        switchLanguage('es');
+        switchLanguage('en');
     </script>
 </body>
+
 </html>
