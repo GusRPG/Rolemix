@@ -1062,5 +1062,48 @@
         // Inicializar idioma
         switchLanguage('en');
     </script>
+<!-- Aquí va todo tu contenido de la página -->
+
+  <!-- Contador de visitas -->
+  <div id="visitCounter">Visits: 0</div>
+
+  <!-- Contenedor para el mapa -->
+  <div id="map" style="height: 300px;"></div>
+
+  <!-- Scripts necesarios para Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <!-- Script del contador y mapa -->
+  <script>
+    // Contador simple con CountAPI
+    const namespace = 'rolemix';
+    const key = 'spell_converter';
+    fetch(`https://api.countapi.xyz/hit/${namespace}/${key}`)
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('visitCounter').textContent = `Visits: ${data.value}`;
+      });
+
+    // Mostrar mapa solo si la página está online
+    if (window.location.protocol.startsWith('http')) {
+      fetch('https://ipinfo.io/json?token=YOUR_TOKEN_HERE') // Reemplaza con tu token gratuito
+        .then(res => res.json())
+        .then(data => {
+          const loc = data.loc.split(',');
+          const lat = parseFloat(loc[0]);
+          const lon = parseFloat(loc[1]);
+
+          const map = L.map('map').setView([lat, lon], 4);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+          }).addTo(map);
+
+          // Colocar marcador del visitante
+          L.marker([lat, lon]).addTo(map).bindPopup('You are here!').openPopup();
+        })
+        .catch(err => console.log('Mapa no disponible offline', err));
+    }
+  </script>
 </body>
 </html>
