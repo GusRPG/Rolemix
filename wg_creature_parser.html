@@ -298,7 +298,7 @@
 
     <div class="container">
         <div class="header-bar">
-            <div class="header-title glitch">W&G COMPENDIUM PARSER v0.9</div>
+            <div class="header-title glitch">W&G COMPENDIUM PARSER v9.9</div>
             <div class="controls">
                 <div id="langToggle" class="lang-toggle">ESP</div>
             </div>
@@ -909,7 +909,7 @@
                                 const n = a.substring(0, colon).trim();
                                 let c = a.substring(colon + 1).trim();
                                 let k = j + 1;
-                                while (k < lines.length && !lines[k].match(/^[A-Z][a-zA-Z& \-]*:/) && !isSectionHeader(lines[k])) {
+                                while (k < lines.length && !lines[k].match(/^[A-Z][a-zA-Z0-9& \-()]*:/) && !isSectionHeader(lines[k])) {
                                     c += ' ' + lines[k].trim(); k++;
                                 }
                                 if (c.includes('+') && c.includes('/')) creature.items.push(createItem("weapon", n, c));
