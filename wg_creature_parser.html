@@ -520,7 +520,7 @@
             if (trimmed.includes(':')) return false;
             const patterns = [
                 /^(KEYWORDS|SKILLS|BONUSES|ABILITIES|ACTION|MOB|DETERMINATION|RUIN|ANNIHILATION|NOTES|COMPLICATION)/i,
-                /^(Conviction|Resolve|Speed|Size|Defence|Wounds|Shock|Resilience)/i,
+                /^(Conviction|Resolve|Speed|Size|Defen(c|s)e|Wounds|Shock|Resilience)/i,
                 /^(Tier|S T A I)/i,
                 /^[A-Z\s]+$/
             ];
@@ -786,8 +786,8 @@
                         i++;
                     }
 
-                    if (line.match(/^Defence\s+Wounds\s+Shock\s+Resilience/i)) {
-                        const vals = nextLine.split(/\s+/).filter(v => v);
+                    if (line.match(/^Defen(c|s)e\s+Wounds\s+Shock\s+Resilience/i)) {
+                        const vals = nextLine.replace(/\([^\)]+\)/g, '').split(/\s+/).filter(v => v);
                         creature.system.combat.defence.total = parseInt(vals[0]) || 0;
                         creature.system.combat.wounds.max = parseInt(vals[1]) || 0; creature.system.combat.wounds.value = 0;
                         creature.system.combat.shock.max = (vals[2] === '–' || vals[2] === '-') ? 0 : parseInt(vals[2]) || 0;
@@ -797,7 +797,7 @@
                         if (arm) { const n = arm[1].split(':')[0].trim(); creature.items.push(createItem("armour", n, arm[1])); log(`Armour: ${n}`); }
                         log(`Combat (combined): Def=${vals[0]} Wounds=0/${vals[1]} Shock=0/${vals[2]} Res=${vals[3]}`);
                         i++;
-                    } else if (line.match(/^Defence\s+Wounds\s+Shock/i) && !nextLine.match(/Resilience/i)) {
+                    } else if (line.match(/^Defen(c|s)e\s+Wounds\s+Shock/i) && !nextLine.match(/Resilience/i)) {
                         const vals = nextLine.split(/\s+/).filter(v => v);
                         creature.system.combat.defence.total = parseInt(vals[0]) || 0;
                         creature.system.combat.wounds.max = parseInt(vals[1]) || 0; creature.system.combat.wounds.value = 0;
