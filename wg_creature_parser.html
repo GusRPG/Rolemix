@@ -22,6 +22,7 @@
                 linear-gradient(45deg, #0a0a0a 25%, #111 25%, #111 50%, #0a0a0a 50%, #0a0a0a 75%, #111 75%);
             background-size: 100px 100px;
             overflow-x: hidden;
+            position: relative;
         }
 
         .container {
@@ -29,6 +30,7 @@
             margin: 0 auto;
             padding: 20px;
             position: relative;
+            z-index: 10;
         }
 
         .header-bar {
@@ -102,6 +104,8 @@
                 0 0 20px rgba(0, 255, 65, 0.2),
                 inset 0 0 30px rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(5px);
+            position: relative;
+            z-index: 10;
         }
 
         h1 {
@@ -241,7 +245,9 @@
             border: 1px solid #00ff41;
             padding: 10px;
             text-align: left;
-       7        table th {
+        }
+
+        table th {
             background: rgba(0, 255, 65, 0.1);
             color: #00ff41;
             text-shadow: 0 0 5px #00ff41;
@@ -267,6 +273,7 @@
             text-shadow: 0 0 5px #00ff41;
         }
 
+        /* EFECTO DE INTERFERENCIA - LÍNEA QUE BAJA */
         .scanline {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -293,7 +300,9 @@
     </style>
 </head>
 <body>
+    <!-- EFECTO DE LÍNEA QUE BAJA (SCANLINE) -->
     <div class="scanline"></div>
+
     <div class="container">
         <div class="header-bar">
             <div class="header-title glitch">W&G COMPENDIUM PARSER v9.9</div>
@@ -371,7 +380,7 @@
         let creatures = [];
         let debugLog = [];
         let currentLang = 'en';
-        let SEPARATOR = 'º';  // Default separator
+        let SEPARATOR = 'º';
 
         const translations = {
             en: {
@@ -422,7 +431,7 @@
                 separatorHint: "Usa el carácter seleccionado al inicio de cada nueva criatura. Si no se usa al principio, se tratará como una sola entrada.",
                 inputHint: "Input (separar con º)",
                 inputPlaceholder: "ºNOMBRE CRIATURA...",
-                toggleAll: "Activar/Desactivar Todosiatric",
+                toggleAll: "Activar/Desactivar Todos",
                 import: "Importar",
                 clear: "Limpiar",
                 download: "Descargar JSON",
@@ -464,7 +473,6 @@
             }
         };
 
-        // Initialize separator
         document.getElementById('separatorSelect').addEventListener('change', function() {
             SEPARATOR = this.value;
             updateHints();
@@ -987,7 +995,6 @@
                 if (!hasSeparator) {
                     const c = parseCreature(text);
                     if (c) {
-                        // AÑADIR AL FINAL en vez de reemplazar
                         creatures.push(c);
                     }
                 } else {
@@ -1006,7 +1013,6 @@
                     if (currentBlock.length > 0) blocks.push(currentBlock.join('\n'));
                     
                     const newCreatures = blocks.map(block => parseCreature(block)).filter(c => c);
-                    // AÑADIR AL FINAL
                     creatures = creatures.concat(newCreatures);
                 }
 
@@ -1069,7 +1075,7 @@
                     "packageName":"wg"
                 },
                 "type":"Actor",
-                "items":creatures,  // TODOS los acumulados
+                "items":creatures,
                 "source":{"world":"wg","system":"wrath-and-glory","version":{"core":"13.350","system":"7.3.0"}},
                 "folders":[]
             };
@@ -1091,7 +1097,7 @@
                     "id":`world.export-${id}`
                 },
                 "type":"Actor",
-                "items":creatures,  // TODOS los acumulados
+                "items":creatures,
                 "source":{"world":"wg","system":"wrath-and-glory","version":{"core":"13.350","system":"7.3.0"}},
                 "folders":[]
             };
@@ -1163,14 +1169,12 @@
             }).join('\n');
         }
 
-        // EVENT LISTENERS
         document.getElementById('importBtn').addEventListener('click', importCreatures);
         document.getElementById('clearBtn').addEventListener('click', clearInput);
         document.getElementById('clearAllBtn').addEventListener('click', clearAll);
         document.getElementById('downloadBtn').addEventListener('click', downloadJSON);
         document.getElementById('copyBtn').addEventListener('click', copyJSON);
 
-        // Initialize
         updateHints();
     </script>
 </body>
