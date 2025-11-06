@@ -106,21 +106,6 @@
             letter-spacing: 2px;
         }
 
-        .separator-notice {
-            text-align: center;
-            font-size: 0.95rem;
-            color: #00ff41;
-            margin-bottom: 15px;
-            text-shadow: 0 0 5px #00ff41;
-            font-weight: bold;
-        }
-        .separator-notice .tilde {
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-            color: #00ff41;
-            text-shadow: 0 0 8px #00ff41;
-        }
-
         .hint {
             text-align: center;
             font-size: 0.9rem;
@@ -277,41 +262,20 @@
             text-shadow: 0 0 5px #00ff41;
         }
 
-        /* EFECTO CRT: LÍNEA QUE BAJA (SCANLINE) */
-        .crt-scanline {
+        /* EFECTO DE INTERFERENCIA - LÍNEA QUE BAJA */
+        .scanline {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             pointer-events: none;
-            background: repeating-linear-gradient(
-                0deg,
-                rgba(0, 255, 65, 0.03),
-                rgba(0, 255, 65, 0.03) 2px,
-                transparent 2px,
-                transparent 4px
-            );
+            background: linear-gradient(to bottom, transparent 50%, rgba(0, 255, 65, 0.03) 50%);
+            background-size: 100% 4px;
             z-index: 1000;
-            animation: scanline 7s linear infinite;
-            opacity: 0.6;
+            animation: scan 8s linear infinite;
         }
 
-        @keyframes scanline {
+        @keyframes scan {
             0% { transform: translateY(-100%); }
             100% { transform: translateY(100%); }
-        }
-
-        .crt-flicker {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            pointer-events: none;
-            background: transparent;
-            z-index: 999;
-            animation: flicker 0.15s infinite alternate;
-            opacity: 0.02;
-        }
-
-        @keyframes flicker {
-            0% { opacity: 0.01; }
-            100% { opacity: 0.03; }
         }
 
         .glitch {
@@ -322,11 +286,15 @@
             0%, 100% { text-shadow: 0 0 5px #00ff41; }
             50% { text-shadow: 2px 0 0 #ff00ff, -2px 0 0 #00ffff; }
         }
+
+        .tilde {
+            font-family: 'Orbitron', sans-serif;
+        }
     </style>
 </head>
 <body>
-    <div class="crt-scanline"></div>
-    <div class="crt-flicker"></div>
+    <!-- EFECTO DE LÍNEA QUE BAJA (SCANLINE) -->
+    <div class="scanline"></div>
 
     <div class="container">
         <div class="header-bar">
@@ -339,15 +307,9 @@
         <div class="main-content">
             <h1 data-en="Wrath & Glory Compendium Parser" data-es="Wrath & Glory Compendium Parser">Wrath & Glory Compendium Parser</h1>
             
-            <div class="separator-notice" id="separatorNotice">
-                <span data-en="You can separate entries with <strong>º</strong> or <span class='tilde'>~</span> at the beginning of each creature."
-                      data-es="Puedes separar registros con <strong>º</strong> o <span class='tilde'>~</span> al inicio de cada criatura.">
-                </span>
-            </div>
-
             <div class="hint" id="separatorHint">
-                <span data-en="Use º or ~ at the start of each new creature. If none is used at the beginning, it will be treated as a single entry."
-                      data-es="Usa º o ~ al inicio de cada nueva criatura. Si no se usa al principio, se tratará como una sola entrada.">
+                <span data-en="Use the selected character at the start of each new creature. If none is used at the beginning, it will be treated as a single entry."
+                      data-es="Usa el carácter seleccionado al inicio de cada nueva criatura. Si no se usa al principio, se tratará como una sola entrada.">
                 </span>
             </div>
 
@@ -367,8 +329,8 @@
 
             <div class="row">
                 <div class="col">
-                    <h3 data-en="Input (separate with º or ~)" data-es="Input (separar con º o ~)">Input (separate with º or ~)</h3>
-                    <textarea id="input" placeholder="ºCREATURE NAME... or ~CREATURE NAME..."></textarea>
+                    <h3 data-en="Input (start name with º or <span class=&quot;tilde&quot;>~</span> for multiple creatures)" data-es="Input (iniciar nombre con º o <span class=&quot;tilde&quot;>~</span> para multiples criaturas)">Input (start name with º or <span class="tilde">~</span> for multiple creatures)</h3>
+                    <textarea id="input" placeholder="º or ~ CREATURE NAME..."></textarea>
                     <button id="importBtn" data-en="Import" data-es="Importar">Import</button>
                     <button id="clearBtn" data-en="Clear" data-es="Limpiar">Clear</button>
                 </div>
@@ -404,14 +366,12 @@
         let creatures = [];
         let debugLog = [];
         let currentLang = 'en';
-        const SEPARATORS = ['º', '~'];
 
         const translations = {
             en: {
-                separatorNotice: "You can separate entries with <strong>º</strong> or <span class='tilde'>~</span> at the beginning of each creature.",
                 separatorHint: "Use º or ~ at the start of each new creature. If none is used at the beginning, it will be treated as a single entry.",
-                inputHint: "Input (separate with º or ~)",
-                inputPlaceholder: "ºCREATURE NAME... or ~CREATURE NAME...",
+                inputHint: "Input (start name with º or <span class=\"tilde\">~</span> for multiple creatures)",
+                inputPlaceholder: "º or ~ CREATURE NAME...",
                 toggleAll: "Toggle All",
                 import: "Import",
                 clear: "Clear",
@@ -425,20 +385,37 @@
                 tier: "Tier",
                 infoCreatures: "creature(s)",
                 skills: {
-                    'athletics': 'Athletics', 'awareness': 'Awareness', 'ballisticSkill': 'Ballistic Skill',
-                    'cunning': 'Cunning', 'deception': 'Deception', 'insight': 'Insight', 'intimidation': 'Intimidation',
-                    'investigation': 'Investigation', 'leadership': 'Leadership', 'medicae': 'Medicae',
-                    'persuasion': 'Persuasion', 'pilot': 'Pilot', 'psychicMastery': 'Psychic Mastery',
-                    'scholar': 'Scholar', 'stealth': 'Stealth', 'survival': 'Survival', 'tech': 'Tech',
+                    'athletics': 'Athletics',
+                    'awareness': 'Awareness',
+                    'ballisticSkill': 'Ballistic Skill',
+                    'cunning': 'Cunning',
+                    'deception': 'Deception',
+                    'insight': 'Insight',
+                    'intimidation': 'Intimidation',
+                    'investigation': 'Investigation',
+                    'leadership': 'Leadership',
+                    'medicae': 'Medicae',
+                    'persuasion': 'Persuasion',
+                    'pilot': 'Pilot',
+                    'psychicMastery': 'Psychic Mastery',
+                    'scholar': 'Scholar',
+                    'stealth': 'Stealth',
+                    'survival': 'Survival',
+                    'tech': 'Tech',
                     'weaponSkill': 'Weapon Skill'
                 },
-                sections: { 'WEAPONS': 'WEAPONS', 'ARMOUR': 'ARMOUR', 'ABILITIES': 'ABILITIES', 'TALENTS': 'TALENTOS', 'KEYWORDS': 'KEYWORDS' }
+                sections: {
+                    'ARMAS': 'WEAPONS',
+                    'ARMADURAS': 'ARMOUR',
+                    'ABILITIES': 'ABILITIES',
+                    'TALENTOS': 'TALENTOS',
+                    'KEYWORDS': 'KEYWORDS'
+                }
             },
             es: {
-                separatorNotice: "Puedes separar registros con <strong>º</strong> o <span class='tilde'>~</span> al inicio de cada criatura.",
                 separatorHint: "Usa º o ~ al inicio de cada nueva criatura. Si no se usa al principio, se tratará como una sola entrada.",
-                inputHint: "Input (separar con º o ~)",
-                inputPlaceholder: "ºNOMBRE CRIATURA... o ~NOMBRE CRIATURA...",
+                inputHint: "Input (iniciar nombre con º o <span class=\"tilde\">~</span> para multiples criaturas)",
+                inputPlaceholder: "º o ~ NOMBRE CRIATURA...",
                 toggleAll: "Activar/Desactivar Todos",
                 import: "Importar",
                 clear: "Limpiar",
@@ -452,63 +429,58 @@
                 tier: "Tier",
                 infoCreatures: "criatura(s)",
                 skills: {
-                    'athletics': 'Atletismo', 'awareness': 'Vigilancia', 'ballisticSkill': 'Ballistic Skill',
-                    'cunning': 'Astucia', 'deception': 'Engaño', 'insight': 'Perspicacia', 'intimidation': 'Intimidación',
-                    'investigation': 'Investigación', 'leadership': 'Liderazgo', 'medicae': 'Medicae',
-                    'persuasion': 'Persuasión', 'pilot': 'Pilotaje', 'psychicMastery': 'Dominio Psíquico',
-                    'scholar': 'Erudición', 'stealth': 'Sigilo', 'survival': 'Supervivencia', 'tech': 'Técnica',
+                    'athletics': 'Atletismo',
+                    'awareness': 'Vigilancia',
+                    'ballisticSkill': 'Ballistic Skill',
+                    'cunning': 'Astucia',
+                    'deception': 'Engaño',
+                    'insight': 'Perspicacia',
+                    'intimidation': 'Intimidación',
+                    'investigation': 'Investigación',
+                    'leadership': 'Liderazgo',
+                    'medicae': 'Medicae',
+                    'persuasion': 'Persuasión',
+                    'pilot': 'Pilotaje',
+                    'psychicMastery': 'Dominio Psíquico',
+                    'scholar': 'Erudición',
+                    'stealth': 'Sigilo',
+                    'survival': 'Supervivencia',
+                    'tech': 'Técnica',
                     'weaponSkill': 'Weapon Skill'
                 },
-                sections: { 'WEAPONS': 'ARMAS', 'ARMOUR': 'ARMADURAS', 'ABILITIES': 'HABILIDADES', 'TALENTS': 'TALENTOS', 'KEYWORDS': 'KEYWORDS' }
+                sections: {
+                    'WEAPONS': 'ARMAS',
+                    'ARMOUR': 'ARMADURAS',
+                    'ABILITIES': 'HABILIDADES',
+                    'TALENTS': 'TALENTOS',
+                    'KEYWORDS': 'KEYWORDS'
+                }
             }
         };
 
         function updateHints() {
-            document.getElementById('separatorNotice').innerHTML = translations[currentLang].separatorNotice;
-            document.getElementById('separatorHint').innerHTML = `<span>${translations[currentLang].separatorHint}</span>`;
-            document.querySelector('h3[data-en*="Input"]').textContent = translations[currentLang].inputHint;
-            document.getElementById('input').placeholder = translations[currentLang].inputPlaceholder;
+            const hint = document.getElementById('separatorHint');
+            const inputHint = document.querySelector('h3[data-en*="Input"]');
+            const placeholder = document.getElementById('input');
+            
+            hint.innerHTML = `<span data-en="${translations.en.separatorHint}" data-es="${translations.es.separatorHint}">${translations[currentLang].separatorHint}</span>`;
+            inputHint.innerHTML = translations[currentLang].inputHint;
+            placeholder.placeholder = translations[currentLang].inputPlaceholder;
         }
 
         function switchLanguage(lang) {
             currentLang = lang;
-            document.querySelectorAll('[data-en]').forEach(el => el.textContent = el.getAttribute(`data-${lang}`));
+            document.querySelectorAll('[data-en]').forEach(el => {
+                el.innerHTML = el.getAttribute(`data-${lang}`);
+            });
             document.getElementById('langToggle').textContent = lang === 'en' ? 'ESP' : 'ENG';
             updateHints();
             if (creatures.length > 0) updateTable();
         }
 
-        document.getElementById('langToggle').addEventListener('click', () => switchLanguage(currentLang === 'en' ? 'es' : 'en'));
-
-        function importCreatures() {
-            try {
-                const text = document.getElementById('input').value.trim();
-                if (!text) return;
-
-                const lines = text.split('\n');
-                let blocks = [], currentBlock = [];
-                const firstLine = lines.find(l => l.trim());
-                const hasSep = firstLine && SEPARATORS.some(s => firstLine.trim().startsWith(s));
-
-                if (!hasSep) {
-                    const c = parseCreature(text);
-                    if (c) creatures.push(c);
-                } else {
-                    lines.forEach(line => {
-                        const trimmed = line.trim();
-                        if (SEPARATORS.some(s => trimmed.startsWith(s))) {
-                            if (currentBlock.length > 0) { blocks.push(currentBlock.join('\n')); currentBlock = []; }
-                            currentBlock.push(line);
-                        } else if (currentBlock.length > 0) currentBlock.push(line);
-                    });
-                    if (currentBlock.length > 0) blocks.push(currentBlock.join('\n'));
-                    const newCreatures = blocks.map(block => parseCreature(block)).filter(c => c);
-                    creatures = creatures.concat(newCreatures);
-                }
-
-                updateTable(); updateInfo();
-            } catch (e) { alert('Error: ' + e.message); console.error(e); }
-        }
+        document.getElementById('langToggle').addEventListener('click', () => {
+            switchLanguage(currentLang === 'en' ? 'es' : 'en');
+        });
 
         const skillMap = {
             "athletics": { key: "athletics", attr: "strength" },
@@ -533,8 +505,6 @@
             "weapon skill": { key: "weaponSkill", attr: "initiative" },
             "weapon": { key: "weaponSkill", attr: "initiative" }
         };
-
-        function log(msg) { debugLog.push(msg); }
 
         function generateId() {
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -695,8 +665,7 @@
 
             let nameIndex = 0;
             while (nameIndex < lines.length && !lines[nameIndex].match(/^(Tier|Threat|Keywords|S T A I)/i)) nameIndex++;
-            const name = lines.slice(0, nameIndex).join(' ')
-                .replace(new RegExp(`^[${SEPARATORS.join('')}]+`), '').trim().toUpperCase() || "UNKNOWN";
+            const name = lines.slice(0, nameIndex).join(' ').replace(/^[º~]/, '').trim().toUpperCase() || "UNKNOWN";
             log(`Creature name: ${name}`);
 
             const skillsTemplate = {};
@@ -967,7 +936,7 @@
                         let notes = "";
                         let j = i + 1;
                         while (j < lines.length && !isSectionHeader(lines[j])) { notes += lines[j].trim() + " "; j++; }
-                        notes = notes.trim().replace(new RegExp(SEPARATORS.join('|'), 'g'), "<br>");
+                        notes = notes.trim().replace(/[º~]/g, "<br>");
                         creature.system.notes = `<p>${notes}</p>`;
                         log(`Notes: ${notes.substring(0,50)}...`);
                         i = j - 1;
@@ -989,17 +958,60 @@
             return creature;
         }
 
+        function log(msg) { debugLog.push(msg); }
+
+        function importCreatures() {
+            try {
+                const text = document.getElementById('input').value.trim();
+                if (!text) return;
+
+                const lines = text.split('\n');
+                let blocks = [];
+                let currentBlock = [];
+
+                const firstLine = lines.find(l => l.trim());
+                const hasSeparator = firstLine && (firstLine.trim().startsWith('º') || firstLine.trim().startsWith('~'));
+
+                if (!hasSeparator) {
+                    const c = parseCreature(text);
+                    if (c) {
+                        creatures.push(c);
+                    }
+                } else {
+                    lines.forEach(line => {
+                        const trimmed = line.trim();
+                        if (trimmed.startsWith('º') || trimmed.startsWith('~')) {
+                            if (currentBlock.length > 0) {
+                                blocks.push(currentBlock.join('\n'));
+                                currentBlock = [];
+                            }
+                            currentBlock.push(line);
+                        } else if (currentBlock.length > 0) {
+                            currentBlock.push(line);
+                        }
+                    });
+                    if (currentBlock.length > 0) blocks.push(currentBlock.join('\n'));
+                    
+                    const newCreatures = blocks.map(block => parseCreature(block)).filter(c => c);
+                    creatures = creatures.concat(newCreatures);
+                }
+
+                updateTable();
+                updateInfo();
+            } catch (e) {
+                alert('Error: ' + e.message);
+                console.error(e);
+            }
+        }
+
         function updateTable() {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
             creatures.forEach((c, idx) => {
                 const row = tbody.insertRow();
-                row.innerHTML = `
-                    <td onclick="showCreatureDetail(${idx})" style="cursor:pointer;color:#00ff41;text-decoration:underline;">${c.name}</td>
-                    <td>${c.system.advances.tier}</td>
-                    <td>${c.items.length}</td>
-                    <td><button onclick="deleteCreature(${idx})">${translations[currentLang].deleteAll.split(' ')[0]}</button></td>
-                `;
+                row.innerHTML = `<td onclick="showCreatureDetail(${idx})" style="cursor:pointer;color:#00ff41;text-decoration:underline;">${c.name}</td>
+                                 <td>${c.system.advances.tier}</td><td>${c.items.length}</td>
+                                 <td><button onclick="deleteCreature(${idx})">${translations[currentLang].deleteAll.split(' ')[0]}</button></td>`;
             });
         }
 
