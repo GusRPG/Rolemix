@@ -308,8 +308,8 @@
             <h1 data-en="Wrath & Glory Compendium Parser" data-es="Wrath & Glory Compendium Parser">Wrath & Glory Compendium Parser</h1>
             
             <div class="hint" id="separatorHint">
-                <span data-en="Use the selected character at the start of each new creature. If none is used at the beginning, it will be treated as a single entry."
-                      data-es="Usa el carácter seleccionado al inicio de cada nueva criatura. Si no se usa al principio, se tratará como una sola entrada.">
+                <span data-en="Use º or ~ at the start of each new creature. If none is used at the beginning, it will be treated as a single entry."
+                      data-es="Usa º o ~ al inicio de cada nueva criatura. Si no se usa al principio, se tratará como una sola entrada.">
                 </span>
             </div>
 
@@ -998,6 +998,8 @@
 
                 updateTable();
                 updateInfo();
+                document.getElementById('input').value = '';
+                document.getElementById('debug').innerText = '';
             } catch (e) {
                 alert('Error: ' + e.message);
                 console.error(e);
