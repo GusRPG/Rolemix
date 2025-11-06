@@ -530,9 +530,9 @@
         function createItem(type, name, content, abilityType = "", equipped = true) {
             const item = {
                 "type": type, "name": name, "_id": generateId(), "effects": [], "folder": null, "sort": 0,
-                "flags": { "core": {} },
+                "flags": {},
                 "_stats": { "coreVersion": "13.350", "systemId": "wrath-and-glory", "systemVersion": "7.3.0",
-                            "createdTime": Date.now(), "modifiedTime": Date.now(), "lastModifiedBy": "mwx452c2tE9lwAVm" },
+                            "lastModifiedBy": null },
                 "ownership": { "default": 0 }, "img": ""
             };
 
@@ -543,7 +543,7 @@
                 item.img = "modules/wng-core/assets/icons/armour/armour.webp";
                 const m = content.match(/(\d+)/);
                 const rating = m ? parseInt(m[1]) : 0;
-                item.system = { "quantity": 1, "rarity": "common", "description": "", "value": 0, "keywords": "", "equipped": true,
+                item.system = { "quantity": 1, "rarity": "common", "description": "", "value": null, "keywords": "", "equipped": true,
                                 "rating": rating, "base": 0, "traits": { "list": [] }, "invulnerable": false };
             } else if (type === "talent") {
                 item.img = "modules/wng-core/assets/icons/talents/talent.webp";
@@ -679,7 +679,7 @@
                 "name": name, "type": "threat", "img": "modules/wng-core/assets/images/filler5.webp",
                 "items": [], "effects": [], "folder": null, "flags": {}, "_id": generateId(),
                 "_stats": { "coreVersion": "13.350", "systemId": "wrath-and-glory", "systemVersion": "7.3.0",
-                            "createdTime": Date.now(), "modifiedTime": Date.now(), "lastModifiedBy": "mwx452c2tE9lwAVm" },
+                            "lastModifiedBy": null },
                 "ownership": { "default": 0 },
                 "system": {
                     "attributes": {
