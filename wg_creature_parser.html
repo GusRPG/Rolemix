@@ -972,6 +972,8 @@
                 const firstLine = lines.find(l => l.trim());
                 const hasSeparator = firstLine && (firstLine.trim().startsWith('º') || firstLine.trim().startsWith('~'));
 
+                let addedCount = creatures.length;
+
                 if (!hasSeparator) {
                     const c = parseCreature(text);
                     if (c) {
@@ -999,7 +1001,10 @@
                 updateTable();
                 updateInfo();
                 document.getElementById('input').value = '';
-                document.getElementById('debug').innerText = '';
+
+                if (creatures.length > addedCount) {
+                    showCreatureDetail(creatures.length - 1);
+                }
             } catch (e) {
                 alert('Error: ' + e.message);
                 console.error(e);
